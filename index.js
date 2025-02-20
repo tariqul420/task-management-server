@@ -123,6 +123,23 @@ async function run() {
         })
 
         // ---------------------- task related api ----------------------
+        app.post('/tasks', verifyToken, async (req, res) => {
+            try {
+                const task = req.body
+                const result = await tasksCollection.insertOne(task)
+                res.send(result)
+            } catch (error) {
+                console.error('Post Task:', error.message)
+                res.status(500).send({ error: 'Failed to post task' })
+            }
+        })
+
+
+
+
+
+
+
 
 
     } catch (err) {
