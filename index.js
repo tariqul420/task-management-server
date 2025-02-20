@@ -158,9 +158,17 @@ async function run() {
             }
         })
 
+        app.delete('/tasks/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id
+                const result = await tasksCollection.deleteOne({ _id: ObjectId(id) })
 
-
-
+                res.send(result)
+            } catch (error) {
+                console.error('Delete Task:', error.message)
+                res.status(500).send({ error: 'Failed to delete task' })
+            }
+        })
 
     } catch (err) {
         console.error('Mongodb', err.message)
