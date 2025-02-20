@@ -134,7 +134,15 @@ async function run() {
             }
         })
 
-
+        app.get('/tasks', verifyToken, async (req, res) => {
+            try {
+                const tasks = await tasksCollection.find({}).toArray()
+                res.send(tasks)
+            } catch (error) {
+                console.error('Get Tasks:', error.message)
+                res.status(500).send({ error: 'Failed to get tasks' })
+            }
+        })
 
 
 
