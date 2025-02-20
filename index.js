@@ -37,13 +37,13 @@ async function run() {
         console.log("☘️  You successfully connected to MongoDB!");
 
         // Database Collection Name
-        const db = client.db('task-manager')
+        const db = client.db('task-management')
         const usersCollection = db.collection('Users')
         const tasksCollection = db.collection('Tasks')
 
         // Verify Jwt Token
         const verifyToken = async (req, res, next) => {
-            const token = req.cookies.TokenName
+            const token = req.cookies.task_management_token
             if (!token) return res.status(401).send({ error: 'unauthorized access' })
 
             // Verify Token
@@ -60,7 +60,7 @@ async function run() {
             try {
                 const userInfo = req.body
                 const token = jwt.sign(userInfo, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
-                res.cookie('TokenName', token, {
+                res.cookie('task_management_token', token, {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === "production",
                     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
@@ -74,7 +74,7 @@ async function run() {
         //logout when not access jwt token
         app.post('/logout', async (req, res) => {
             try {
-                res.clearCookie('ServiceOrbit_Token', {
+                res.clearCookie('task_management_token', {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === "production",
                     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
@@ -169,7 +169,6 @@ async function run() {
                 res.status(500).send({ error: 'Failed to delete task' })
             }
         })
-
     } catch (err) {
         console.error('Mongodb', err.message)
     }
