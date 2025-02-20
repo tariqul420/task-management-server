@@ -144,7 +144,19 @@ async function run() {
             }
         })
 
+        app.put('/tasks/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id
+                const task = req.body
 
+                const result = await tasksCollection.updateOne({ _id: ObjectId(id) }, { $set: task })
+
+                res.send(result)
+            } catch (error) {
+                console.error('Patch Task:', error.message)
+                res.status(500).send({ error: 'Failed to patch task' })
+            }
+        })
 
 
 
