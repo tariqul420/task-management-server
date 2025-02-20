@@ -20,7 +20,7 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(morgan('dev'))
 
-const uri = `mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@tariqul-islam.mchvj.mongodb.net/?retryWrites=true&w=majority&appName=TARIQUL-ISLAM`;
+const uri = process.env.MONGO_URI;
 
 const client = new MongoClient(uri, {
     serverApi: {
