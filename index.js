@@ -5,10 +5,9 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const morgan = require('morgan');
-const { WebSocketServer } = require('ws'); // Import WebSocketServer from 'ws'
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 3000;
 
 // Middleware
 const corsOptions = {
@@ -22,6 +21,9 @@ app.use(cookieParser());
 app.use(morgan('dev'));
 
 const uri = process.env.MONGO_URI;
+// // const uri = `mongodb+srv://tasks-management:p6jL0shQqdNY9N9c@tariqul-islam.mchvj.mongodb.net/?retryWrites=true&w=majority&appName=TARIQUL-ISLAM`
+
+// const uri = `mongodb+srv://tasks-management:p6jL0shQqdNY9N9c@tariqul-islam.mchvj.mongodb.net/?retryWrites=true&w=majority&appName=TARIQUL-ISLAM`
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -109,25 +111,17 @@ async function run() {
             try {
                 const task = req.body;
                 const result = await tasksCollection.insertOne(task);
-
-                const insertedTask = await tasksCollection.findOne({ _id: result.insertedId });
-
-                if (!insertedTask) {
-                    throw new Error('Failed to fetch inserted task');
-                }
-
-                broadcastUpdate('taskCreated', insertedTask);
-
-                res.send(insertedTask);
+                res.send(result);
             } catch (error) {
                 console.error('Post Task:', error.message);
                 res.status(500).send({ error: 'Failed to post task' });
             }
         });
 
-        app.get('/tasks/email', async (req, res) => {
+        app.get('/tasks/:email', async (req, res) => {
             try {
-                const tasks = await tasksCollection.find({}).toArray();
+                const email = req.params.email;
+                const tasks = await tasksCollection.find({ user: email }).toArray();
                 res.send(tasks);
             } catch (error) {
                 console.error('Get Tasks:', error.message);
@@ -152,9 +146,6 @@ async function run() {
                     throw new Error('Failed to fetch updated task');
                 }
 
-                // Broadcast the updated task to all clients
-                broadcastUpdate('taskUpdated', updatedTask);
-
                 res.send(result);
             } catch (error) {
                 console.error('Patch Task:', error.message);
@@ -166,9 +157,6 @@ async function run() {
             try {
                 const id = req.params.id;
                 const result = await tasksCollection.deleteOne({ _id: new ObjectId(id) });
-
-                // Broadcast the deleted task ID to all clients
-                broadcastUpdate('taskDeleted', { _id: new ObjectId(id) });
 
                 res.send(result);
             } catch (error) {
@@ -186,34 +174,6 @@ app.get('/', (req, res) => {
     res.send('Hello Programmer. How Are You? This Server For My-Todos ❤️');
 });
 
-const server = app.listen(port, () => {
+app.listen(port, () => {
     console.log(`☘️  You successfully connected to Server: ${port}`);
-});
-
-const wss = new WebSocketServer({ server });
-
-// Function to broadcast updates to all connected clients
-const broadcastUpdate = (type, data) => {
-    wss.clients.forEach((client) => {
-        if (client.readyState === client.OPEN) { // Use client.OPEN instead of WebSocket.OPEN
-            client.send(JSON.stringify({ type, data }));
-        }
-    });
-};
-
-wss.on('connection', (ws) => {
-    console.log('New WebSocket connection');
-
-    // Send a welcome message to the client
-    ws.send(JSON.stringify({ type: 'message', data: 'Connected to WebSocket server' }));
-
-    // Handle WebSocket errors
-    ws.on('error', (error) => {
-        console.error('WebSocket error:', error);
-    });
-
-    // Handle WebSocket close
-    ws.on('close', () => {
-        console.log('WebSocket connection closed');
-    });
 });
