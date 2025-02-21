@@ -5,9 +5,10 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const morgan = require('morgan');
+const {WebSocketServer} = require('ws')
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 // Middleware
 const corsOptions = {
@@ -104,24 +105,6 @@ async function run() {
             }
         })
 
-        // get user role
-        app.get('/users/role/:email', verifyToken, async (req, res) => {
-            try {
-                const email = req.params.email
-
-                if (req?.user?.email !== email) {
-                    return res.status(403).send({ message: 'forbidden access' });
-                }
-
-                const result = await usersCollection.findOne({ email })
-
-                res.send({ role: result?.role })
-            } catch (error) {
-                console.error('Check Role:', error.message)
-                res.status(500).send({ error: 'Failed to check role' })
-            }
-        })
-
         // ---------------------- task related api ----------------------
         app.post('/tasks', verifyToken, async (req, res) => {
             try {
@@ -179,6 +162,20 @@ app.get('/', (req, res) => {
     res.send('Hello Programmer. How Are You? This Server For My-Todos ❤️')
 })
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`☘️  You successfully connected to Server: ${port}`);
 })
+
+const wss = new WebSocketServer({server});
+
+wss.on('connection', (ws)=>{
+    ws.on('message', (data)=>{
+        console.log('data form client %s: ', data)
+        ws.send('thanks buddy!')
+    })
+})
+
+// Event listener for errors
+wss.on('error', (error) => {
+    console.error('WebSocket error:', error);
+});
