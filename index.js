@@ -121,14 +121,26 @@ async function run() {
         app.get('/tasks/:email', async (req, res) => {
             try {
                 const email = req.params.email;
-                const tasks = await tasksCollection.find({ user: email }).toArray();
+                const { category } = req.query;
+        
+                const query = { user: email };
+        
+                // Apply category filtering correctly
+                if (category === 'inProgress') {
+                    query.category = 'In Progress';
+                } else if (category === 'done') {
+                    query.category = 'Done';
+                }
+        
+                // Fetch tasks sorted by newest first
+                const tasks = await tasksCollection.find(query).sort({ date: -1 }).toArray();
                 res.send(tasks);
             } catch (error) {
                 console.error('Get Tasks:', error.message);
                 res.status(500).send({ error: 'Failed to get tasks' });
             }
         });
-
+        
         app.put('/tasks/:id', async (req, res) => {
             try {
                 const id = req.params.id;
@@ -138,13 +150,6 @@ async function run() {
                     { _id: new ObjectId(id) },
                     { $set: task }
                 );
-
-                // Fetch the updated document
-                const updatedTask = await tasksCollection.findOne({ _id: new ObjectId(id) });
-
-                if (!updatedTask) {
-                    throw new Error('Failed to fetch updated task');
-                }
 
                 res.send(result);
             } catch (error) {
@@ -164,6 +169,37 @@ async function run() {
                 res.status(500).send({ error: 'Failed to delete task' });
             }
         });
+
+        app.put('/tasks/reorder', async (req, res) => {
+            try {
+                const { newOrder } = req.body;
+        
+                if (!newOrder || !Array.isArray(newOrder)) {
+                    return res.status(400).send({ error: 'Invalid task order data' });
+                }
+        
+                // Ensure all _id values are valid ObjectIds
+                const bulkOperations = newOrder.map((task, index) => {
+                    if (!ObjectId.isValid(task._id)) {
+                        throw new Error(`Invalid ObjectId: ${task._id}`);
+                    }
+                    return {
+                        updateOne: {
+                            filter: { _id: new ObjectId(task._id) },
+                            update: { $set: { order: index } }
+                        }
+                    };
+                });
+        
+                const result = await tasksCollection.bulkWrite(bulkOperations);
+        
+                res.send({ success: true, modifiedCount: result.modifiedCount });
+            } catch (error) {
+                console.error('Reorder Tasks:', error.message);
+                res.status(500).send({ error: 'Failed to reorder tasks', details: error.message });
+            }
+        });
+        
     } catch (err) {
         console.error('MongoDB:', err.message);
     }
