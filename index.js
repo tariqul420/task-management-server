@@ -33,7 +33,6 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        await client.connect();
         console.log("☘️  You successfully connected to MongoDB!");
 
         // Database Collection Name
