@@ -172,7 +172,7 @@ async function run() {
             try {
                 for (let i = 0; i < tasks.length; i++) {
                     await tasksCollection.updateOne(
-                        { _id: new ObjectId(tasks[i]._id) }, 
+                        { _id: new ObjectId(tasks[i]._id) },
                         { $set: { order: i } }
                     );
                 }
@@ -182,7 +182,7 @@ async function run() {
                 res.status(500).json({ error: "Failed to reorder tasks" });
             }
         });
-        
+
     } catch (err) {
         console.error('MongoDB:', err.message);
     }
