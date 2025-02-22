@@ -105,7 +105,7 @@ async function run() {
         });
 
         // Task Related APIs
-        app.post('/tasks', async (req, res) => {
+        app.post('/tasks', verifyToken, async (req, res) => {
             try {
                 const task = req.body;
                 const result = await tasksCollection.insertOne(task);
@@ -116,7 +116,7 @@ async function run() {
             }
         });
 
-        app.get('/tasks/:email', async (req, res) => {
+        app.get('/tasks/:email', verifyToken, async (req, res) => {
             try {
                 const email = req.params.email;
                 const { category } = req.query;
@@ -139,7 +139,7 @@ async function run() {
             }
         });
 
-        app.put('/tasks/:id', async (req, res) => {
+        app.put('/tasks/:id', verifyToken, async (req, res) => {
             try {
                 const id = req.params.id;
                 const task = req.body;
@@ -156,7 +156,7 @@ async function run() {
             }
         });
 
-        app.delete('/tasks/:id', async (req, res) => {
+        app.delete('/tasks/:id', verifyToken, async (req, res) => {
             try {
                 const id = req.params.id;
                 const result = await tasksCollection.deleteOne({ _id: new ObjectId(id) });
