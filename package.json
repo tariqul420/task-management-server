@@ -1,5 +1,5 @@
 {
-  "name": "todo-list",
+  "name": "task-manager",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {

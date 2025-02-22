@@ -11,7 +11,8 @@ const port = process.env.PORT || 3000;
 
 // Middleware
 const corsOptions = {
-    origin: ["http://localhost:5173"],
+    origin: [
+        "http://localhost:5173", "https://task-manager-six-murex.vercel.app", "https://ticket-management-0.web.app"],
     credentials: true,
 };
 
@@ -21,9 +22,6 @@ app.use(cookieParser());
 app.use(morgan('dev'));
 
 const uri = process.env.MONGO_URI;
-// // const uri = `mongodb+srv://tasks-management:p6jL0shQqdNY9N9c@tariqul-islam.mchvj.mongodb.net/?retryWrites=true&w=majority&appName=TARIQUL-ISLAM`
-
-// const uri = `mongodb+srv://tasks-management:p6jL0shQqdNY9N9c@tariqul-islam.mchvj.mongodb.net/?retryWrites=true&w=majority&appName=TARIQUL-ISLAM`
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -107,7 +105,7 @@ async function run() {
         });
 
         // Task Related APIs
-        app.post('/tasks', verifyToken, async (req, res) => {
+        app.post('/tasks', async (req, res) => {
             try {
                 const task = req.body;
                 const result = await tasksCollection.insertOne(task);
@@ -118,20 +116,20 @@ async function run() {
             }
         });
 
-        app.get('/tasks/:email', verifyToken, async (req, res) => {
+        app.get('/tasks/:email', async (req, res) => {
             try {
                 const email = req.params.email;
                 const { category } = req.query;
-        
+
                 const query = { user: email };
-        
+
                 // Apply category filtering correctly
                 if (category === 'inProgress') {
                     query.category = 'In Progress';
                 } else if (category === 'done') {
                     query.category = 'Done';
                 }
-        
+
                 // Fetch tasks sorted by newest first
                 const tasks = await tasksCollection.find(query).sort({ date: -1 }).toArray();
                 res.send(tasks);
@@ -140,8 +138,8 @@ async function run() {
                 res.status(500).send({ error: 'Failed to get tasks' });
             }
         });
-        
-        app.put('/tasks/:id', verifyToken, async (req, res) => {
+
+        app.put('/tasks/:id', async (req, res) => {
             try {
                 const id = req.params.id;
                 const task = req.body;
@@ -158,7 +156,7 @@ async function run() {
             }
         });
 
-        app.delete('/tasks/:id', verifyToken, async (req, res) => {
+        app.delete('/tasks/:id', async (req, res) => {
             try {
                 const id = req.params.id;
                 const result = await tasksCollection.deleteOne({ _id: new ObjectId(id) });
@@ -169,37 +167,6 @@ async function run() {
                 res.status(500).send({ error: 'Failed to delete task' });
             }
         });
-
-        app.put('/tasks/reorder', async (req, res) => {
-            try {
-                const { newOrder } = req.body;
-        
-                if (!newOrder || !Array.isArray(newOrder)) {
-                    return res.status(400).send({ error: 'Invalid task order data' });
-                }
-        
-                // Ensure all _id values are valid ObjectIds
-                const bulkOperations = newOrder.map((task, index) => {
-                    if (!ObjectId.isValid(task._id)) {
-                        throw new Error(`Invalid ObjectId: ${task._id}`);
-                    }
-                    return {
-                        updateOne: {
-                            filter: { _id: new ObjectId(task._id) },
-                            update: { $set: { order: index } }
-                        }
-                    };
-                });
-        
-                const result = await tasksCollection.bulkWrite(bulkOperations);
-        
-                res.send({ success: true, modifiedCount: result.modifiedCount });
-            } catch (error) {
-                console.error('Reorder Tasks:', error.message);
-                res.status(500).send({ error: 'Failed to reorder tasks', details: error.message });
-            }
-        });
-        
     } catch (err) {
         console.error('MongoDB:', err.message);
     }

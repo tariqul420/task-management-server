@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "service-orbit",
+      "name": "task-manager",
       "dependencies": {
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.5",
