@@ -167,6 +167,23 @@ async function run() {
                 res.status(500).send({ error: 'Failed to delete task' });
             }
         });
+
+        app.put("/tasks/reorder", async (req, res) => {
+            const { tasks } = req.body;
+            try {
+                for (let i = 0; i < tasks.length; i++) {
+                    await tasksCollection.updateOne(
+                        { _id: new ObjectId(tasks[i]._id) }, 
+                        { $set: { order: i } }
+                    );
+                }
+                res.status(200).json({ message: "Tasks reordered successfully" });
+            } catch (error) {
+                console.error("Reorder Tasks Error:", error.message);
+                res.status(500).json({ error: "Failed to reorder tasks" });
+            }
+        });
+        
     } catch (err) {
         console.error('MongoDB:', err.message);
     }
