@@ -115,22 +115,9 @@ async function run() {
             }
         });
 
-        app.get('/tasks/:email', verifyToken, async (req, res) => {
+        app.get('/tasks', verifyToken, async (req, res) => {
             try {
-                const email = req.params.email;
-                const { category } = req.query;
-
-                const query = { user: email };
-
-                // Apply category filtering correctly
-                if (category === 'inProgress') {
-                    query.category = 'In Progress';
-                } else if (category === 'done') {
-                    query.category = 'Done';
-                }
-
-                // Fetch tasks sorted by newest first
-                const tasks = await tasksCollection.find(query).sort({ date: -1 }).toArray();
+                const tasks = await tasksCollection.find({}).toArray();
                 res.send(tasks);
             } catch (error) {
                 console.error('Get Tasks:', error.message);
@@ -164,22 +151,6 @@ async function run() {
             } catch (error) {
                 console.error('Delete Task:', error.message);
                 res.status(500).send({ error: 'Failed to delete task' });
-            }
-        });
-
-        app.put("/tasks/reorder", async (req, res) => {
-            const { tasks } = req.body;
-            try {
-                for (let i = 0; i < tasks.length; i++) {
-                    await tasksCollection.updateOne(
-                        { _id: new ObjectId(tasks[i]._id) },
-                        { $set: { order: i } }
-                    );
-                }
-                res.status(200).json({ message: "Tasks reordered successfully" });
-            } catch (error) {
-                console.error("Reorder Tasks Error:", error.message);
-                res.status(500).json({ error: "Failed to reorder tasks" });
             }
         });
 
